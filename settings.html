@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LedgerLive — Settings</title>
+  <link rel="stylesheet" href="ledgerlive-style.css">
+  <style>
+    .page { padding: 24px; }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .section-card h3 {
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    label {
+      display: block;
+      font-weight: 500;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      color: #374151;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background-color: #fff;
+    }
+    textarea {
+      resize: vertical;
+    }
+    .save-btn {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .save-btn:hover {
+      background: #1e4fc6;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">LedgerLive</div>
+    <ul>
+      <li onclick="location.href='dashboard.html'">📊 Dashboard</li>
+      <li onclick="location.href='sales.html'">💰 Sales</li>
+      <li onclick="location.href='inventory.html'">📦 Inventory</li>
+      <li onclick="location.href='suppliers.html'">🚚 Suppliers</li>
+      <li onclick="location.href='reports.html'">📑 Reports</li>
+      <li class="active" onclick="location.href='settings.html'">⚙️ Settings</li>
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <main class="main page">
+    <h1>⚙️ Settings</h1>
+
+    <div class="settings-grid">
+      <!-- User Profile -->
+      <div class="section-card">
+        <h3>User Profile</h3>
+        <label for="s_username">Username</label>
+        <input id="s_username" placeholder="e.g. Admin" />
+
+        <label for="s_email">Email</label>
+        <input id="s_email" type="email" placeholder="admin@example.com" />
+
+        <label for="s_phone">Phone</label>
+        <input id="s_phone" placeholder="+91 99999 99999" />
+
+        <label for="s_password">Password</label>
+        <input id="s_password" type="password" placeholder="Leave blank to keep" />
+
+        <button class="save-btn" id="btnSaveProfile">Save Profile</button>
+      </div>
+
+      <!-- Business Info -->
+      <div class="section-card">
+        <h3>Business Details</h3>
+        <label for="b_name">Business Name</label>
+        <input id="b_name" placeholder="e.g. LedgerLive Store" />
+
+        <label for="b_tax">GST / Tax ID</label>
+        <input id="b_tax" placeholder="e.g. 27ABCDE1234F1Z5" />
+
+        <label for="b_address">Address</label>
+        <textarea id="b_address" rows="4" placeholder="Street, City, State, Zip"></textarea>
+
+        <label for="b_logo">Logo URL (optional)</label>
+        <input id="b_logo" placeholder="https://yourlogo.com/logo.png" />
+
+        <button class="save-btn" id="btnSaveBusiness">Save Business Info</button>
+      </div>
+    </div>
+  </main>
+
+<script>
+  const PROFILE_KEY = 'll_profile';
+  const BUSINESS_KEY = 'll_business';
+
+  function loadSettings() {
+    const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+    const business = JSON.parse(localStorage.getItem(BUSINESS_KEY) || '{}');
+
+    document.getElementById('s_username').value = profile.username || '';
+    document.getElementById('s_email').value = profile.email || '';
+    document.getElementById('s_phone').value = profile.phone || '';
+
+    document.getElementById('b_name').value = business.name || '';
+    document.getElementById('b_tax').value = business.tax || '';
+    document.getElementById('b_address').value = business.address || '';
+    document.getElementById('b_logo').value = business.logo || '';
+  }
+
+  document.getElementById('btnSaveProfile').addEventListener('click', () => {
+    const profile = {
+      username: document.getElementById('s_username').value.trim(),
+      email: document.getElementById('s_email').value.trim(),
+      phone: document.getElementById('s_phone').value.trim(),
+    };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    alert('✅ Profile settings saved');
+  });
+
+  document.getElementById('btnSaveBusiness').addEventListener('click', () => {
+    const business = {
+      name: document.getElementById('b_name').value.trim(),
+      tax: document.getElementById('b_tax').value.trim(),
+      address: document.getElementById('b_address').value.trim(),
+      logo: document.getElementById('b_logo').value.trim(),
+    };
+    localStorage.setItem(BUSINESS_KEY, JSON.stringify(business));
+    alert('✅ Business information saved');
+  });
+
+  // Initialize
+  loadSettings();
+</script>
+</body>
+</html>
