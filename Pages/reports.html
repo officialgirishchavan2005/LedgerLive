@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LedgerLive — Reports</title>
+  <link rel="stylesheet" href="ledgerlive-style.css">
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    .page { padding:22px; }
+    .range { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+    .big-btn { padding:10px 14px; border-radius:8px; border:none; background:#2563eb; color:#fff; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">LedgerLive</div>
+    <ul>
+      <li onclick="location.href='dashboard.html'">📊 Dashboard</li>
+      <li onclick="location.href='sales.html'">💰 Sales</li>
+      <li onclick="location.href='inventory.html'">📦 Inventory</li>
+      <li onclick="location.href='suppliers.html'">🚚 Suppliers</li>
+      <li class="active" onclick="location.href='reports.html'">📑 Reports</li>
+      <li onclick="location.href='settings.html'">⚙️ Settings</li>
+    </ul>
+  </aside>
+
+  <main class="main page">
+    <h1>📑 Reports</h1>
+
+    <div class="section-card">
+      <h3>Export Sales / Inventory / Suppliers (Excel)</h3>
+      <div class="range">
+        <label>From: <input id="rFrom" type="date"></label>
+        <label>To: <input id="rTo" type="date"></label>
+        <button id="btnDownloadMulti" class="big-btn">Download Excel (All sheets)</button>
+      </div>
+      <p style="color:#6b7280; margin-top:8px;">Exports a workbook with three sheets: Sales (filtered by date range), Inventory, Suppliers.</p>
+    </div>
+
+    <div class="section-card" style="margin-top:14px;">
+      <h3>Quick Exports</h3>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        <button id="btnExportToday" class="big-btn">Export Today</button>
+        <button id="btnExportThisMonth" class="big-btn">Export This Month</button>
+      </div>
+    </div>
+  </main>
+
+<script>
+const getSales = ()=> JSON.parse(localStorage.getItem('salesData') || '[]');
+const getInventory = ()=> JSON.parse(localStorage.getItem('dynamicInventory') || '[]');
+const getSuppliers = ()=> JSON.parse(localStorage.getItem('suppliers') || '[]');
+
+function downloadWorkbook(fromISO, toISO, fileName){
+  const from = new Date(fromISO);
+  const to = new Date(toISO);
+  to.setHours(23,59,59,999);
+
+  // Sales filtered by date range
+  const sales = getSales().filter(s => {
+    const d = new Date(s.date || s.timestamp || Date.now());
+    return d >= from && d <= to;
+  }).map(s => ({
+    Date: new Date(s.date || s.timestamp || Date.now()).toLocaleString(),
+    Product: s.product,
+    Quantity: s.qty || s.quantity,
+    Price: s.price,
+    Discount: s.discount,
+    Tax: s.tax,
+    Payment: s.payment,
+    Total: s.total || s.saleAmount,
+    LastUpdated: new Date(localStorage.getItem('salesData_lastUpdate') || Date.now()).toLocaleString()
+  }));
+
+  // Inventory
+  const inventory = getInventory().map(i => ({
+    Product: i.Product || i.name || '',
+    Category: i.Category || i.category || '',
+    Quantity: i.Quantity || i.qty || 0,
+    Price: i.Price || i.price || 0,
+    LastUpdated: new Date(localStorage.getItem('dynamicInventory_lastUpdate') || Date.now()).toLocaleString()
+  }));
+
+  // Suppliers
+  const suppliers = getSuppliers().map(s => ({
+    Name: s.name,
+    Contact: s.contact,
+    Products: (s.products||[]).join(', '),
+    LastUpdated: new Date(localStorage.getItem('suppliers_lastUpdate') || Date.now()).toLocaleString()
+  }));
+
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sales), 'Sales');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(inventory), 'Inventory');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(suppliers), 'Suppliers');
+
+  XLSX.writeFile(wb, fileName);
+}
+
+// Event Listeners
+document.getElementById('btnDownloadMulti').addEventListener('click', ()=>{
+  const from = document.getElementById('rFrom').value;
+  const to = document.getElementById('rTo').value;
+  if(!from || !to) return alert('Select date range');
+  const filename = `LedgerLive_Report_${from}_to_${to}.xlsx`;
+  downloadWorkbook(from, to, filename);
+});
+
+document.getElementById('btnExportToday').addEventListener('click', ()=>{
+  const now = new Date();
+  const iso = now.toISOString().slice(0,10);
+  downloadWorkbook(iso, iso, `LedgerLive_Report_${iso}.xlsx`);
+});
+
+document.getElementById('btnExportThisMonth').addEventListener('click', ()=>{
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+  const end = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().slice(0,10);
+  downloadWorkbook(start, end, `LedgerLive_Report_${start}_to_${end}.xlsx`);
+});
+</script>
+
+</body>
+</html>
